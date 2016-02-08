@@ -73,6 +73,6 @@ dofile '5_test.lua'
 print '==> training!'
 
 while true do
-   train()
+   train(1, 5)
    test()
 end
