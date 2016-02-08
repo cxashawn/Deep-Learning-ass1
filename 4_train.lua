@@ -164,7 +164,7 @@ function train()
                           -- estimate df/dW
                           local df_do = criterion:backward(output, targets[i])
                           model:backward(inputs[i], df_do)
-                          --local newotp = output:select(1,1)
+
                           -- update confusion
                           confusion:add(output, targets[i])
                        end
