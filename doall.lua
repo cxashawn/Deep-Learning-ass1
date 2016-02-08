@@ -29,7 +29,7 @@ cmd:text('Options:')
 cmd:option('-seed', 1, 'fixed input seed for repeatable experiments')
 cmd:option('-threads', 2, 'number of threads')
 -- data:
-cmd:option('-size', 'small', 'how many samples do we load: small | full')
+cmd:option('-size', 'full', 'how many samples do we load: small | full')
 -- model:
 cmd:option('-model', 'convnet', 'type of model to construct: linear | mlp | convnet')
 -- loss:
@@ -40,8 +40,12 @@ cmd:option('-plot', false, 'live plot')
 cmd:option('-optimization', 'SGD', 'optimization method: SGD | ASGD | CG | LBFGS')
 cmd:option('-learningRate', 1e-3, 'learning rate at t=0')
 cmd:option('-batchSize', 1, 'mini-batch size (1 = pure stochastic)')
-cmd:option('-weightDecay', 0, 'weight decay (SGD only)')
-cmd:option('-momentum', 0, 'momentum (SGD only)')
+-- change weightDecay to test regularization. default value 0  (w.z 02.2016)
+cmd:option('-weightDecay', 0.01, 'weight decay (SGD only)')
+-- hyperparameter for elastic net regularization (l1 ratio), en_ratio_l2 = 1 - en_ratio_l1 (w.z 02.2016)
+cmd:option('en_ratio_l1', 0.5, 'ratio for l1 part, should between 0 and 1. default 0 means pure ridge regression')
+-- change momentum to increase converge speed. default value 0 (w.z 02.2016)
+cmd:option('-momentum', 0.5, 'momentum (SGD only)')
 cmd:option('-t0', 1, 'start averaging at t0 (ASGD only), in nb of epochs')
 cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
 cmd:option('-type', 'double', 'type: double | float | cuda')
@@ -73,6 +77,6 @@ dofile '5_test.lua'
 print '==> training!'
 
 while true do
-   train(1, 5)
+   train()
    test()
 end
