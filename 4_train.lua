@@ -38,6 +38,8 @@ if not opt then
    cmd:option('-momentum', 0, 'momentum (SGD only)')
    cmd:option('-t0', 1, 'start averaging at t0 (ASGD only), in nb of epochs')
    cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
+   -- L1, L2 option for optimization
+   cmd:option('-reg', 'L2', 'L2 or L1 regularization')
    cmd:text()
    opt = cmd:parse(arg or {})
 end
@@ -184,7 +186,6 @@ function train()
       if optimMethod == optim.asgd then
          _,_,average = optimMethod(feval, parameters, optimState)
       else
-         
          optimMethod(feval, parameters, optimState)
 
          -- temporary code for regularization 1) L2  2) L1  3) elastic net (w.z 02.2016)
@@ -198,19 +199,23 @@ function train()
          --reg[2] = model:get(3).bias
 
          -- pair structure soring wieghts, the first key are all 1
-         for _,w in ipairs(reg) do
+         -- update on regularization choosing (shawnchen 02/2016)
+         if opt.reg == 'L2' then
+             for _,w in ipairs(reg) do
            -- L2 regularization
-           w:add(-optimState.weightDecay,w)
-
-           -- L1 regularization
-           -- w:add(-optimState.weightDecay,torch.sign(w))
+               w:add(-optimState.weightDecay,w)
+             end
+         else
+             for _, w in ipairs(reg) do
+            -- L1 regularization
+               w:add(-optimState.weightDecay,torch.sign(w))
+             end
 
            -- elastic net
            --w:add(-optimState.weightDecay*optimState.en_ratio_l1,torch.sign(w))
            --w:add(-optimState.weightDecay*(1-optimState.en_ratio_l1),w)
            
         -- regularization end (w.z 02.2016)
-         end
       end
    end
 
