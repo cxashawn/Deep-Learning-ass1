@@ -33,6 +33,8 @@ if not opt then
    cmd:option('-learningRate', 1e-3, 'learning rate at t=0')
    cmd:option('-batchSize', 1, 'mini-batch size (1 = pure stochastic)')
    cmd:option('-weightDecay', 0, 'weight decay (SGD only)')
+   -- hyperparameter for elastic net regularization (l1 ratio), en_ratio_l2 = 1 - en_ratio_l1 (w.z 02.2016)
+   cmd:option('en_ratio_l1', 0, 'ratio for l1 part, should between 0 and 1. default 0 means pure ridge regression')
    cmd:option('-momentum', 0, 'momentum (SGD only)')
    cmd:option('-t0', 1, 'start averaging at t0 (ASGD only), in nb of epochs')
    cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
@@ -88,6 +90,7 @@ elseif opt.optimization == 'SGD' then
    optimState = {
       learningRate = opt.learningRate,
       weightDecay = opt.weightDecay,
+      en_ratio_l1 = opt.en_ratio_l1,
       momentum = opt.momentum,
       learningRateDecay = 1e-7
    }
@@ -181,7 +184,33 @@ function train()
       if optimMethod == optim.asgd then
          _,_,average = optimMethod(feval, parameters, optimState)
       else
+         
          optimMethod(feval, parameters, optimState)
+
+         -- temporary code for regularization 1) L2  2) L1  3) elastic net (w.z 02.2016)
+         -- To Do: 1) add option to switch between regularizations
+         --        2) hyperparameter for elastic net (en_ratio_l1)        
+
+         -- array storing weights (and bias)
+         reg = {}
+         reg[1] = model:get(12).weight
+         -- regularization not applied on bias
+         --reg[2] = model:get(3).bias
+
+         -- pair structure soring wieghts, the first key are all 1
+         for _,w in ipairs(reg) do
+           -- L2 regularization
+           w:add(-optimState.weightDecay,w)
+
+           -- L1 regularization
+           -- w:add(-optimState.weightDecay,torch.sign(w))
+
+           -- elastic net
+           --w:add(-optimState.weightDecay*optimState.en_ratio_l1,torch.sign(w))
+           --w:add(-optimState.weightDecay*(1-optimState.en_ratio_l1),w)
+           
+        -- regularization end (w.z 02.2016)
+         end
       end
    end
 
